@@ -1,5 +1,7 @@
 # httpmock
 
+[![GoDoc](https://godoc.org/github.com/dankinder/httpmock?status.svg)](https://godoc.org/github.com/dankinder/httpmock)
+
 This library builds on Go's built-in [httptest](https://golang.org/pkg/net/http/httptest/) library, adding a more
 mockable interface that can be used easily with other mocking tools like
 [testify/mock](https://godoc.org/github.com/stretchr/testify/mock). It does this by providing a Handler that receives
