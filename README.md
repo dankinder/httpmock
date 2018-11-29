@@ -1,6 +1,8 @@
 # httpmock
 
-[![GoDoc](https://godoc.org/github.com/dankinder/httpmock?status.svg)](https://godoc.org/github.com/dankinder/httpmock)
+<a href="https://godoc.org/github.com/dankinder/httpmock"><img src="https://godoc.org/github.com/dankinder/httpmock?status.svg" alt="GoDoc" /></a>
+<a href="https://goreportcard.com/report/github.com/dankinder/httpmock"><img src="https://goreportcard.com/badge/github.com/dankinder/httpmock" alt="Go Report Card" /></a>
+<a href="https://travis-ci.org/dankinder/httpmock"><img src="https://travis-ci.org/dankinder/httpmock.svg?branch=master" alt="Build Status" /></a>
 
 This library builds on Go's built-in [httptest](https://golang.org/pkg/net/http/httptest/) library, adding a more
 mockable interface that can be used easily with other mocking tools like
