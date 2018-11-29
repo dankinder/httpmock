@@ -119,7 +119,7 @@ func (h *httpToHTTPMockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		log.Printf("Failed to read HTTP body in httpmock: %v", err)
 	}
-	resp := h.handler.Handle(r.Method, r.URL.Path, body)
+	resp := h.handler.Handle(r.Method, r.URL.RequestURI(), body)
 
 	for k, v := range resp.Header {
 		for _, val := range v {
