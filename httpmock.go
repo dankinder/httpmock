@@ -30,6 +30,19 @@ This example uses MockHandler, a Handler that is a github.com/stretchr/testify/m
 
 	downstream.AssertExpectations(t)
 
+If instead you wish to match against headers as well, a slightly different httpmock object can be used
+(please note the change in function name to be matched against):
+
+    downstream := &httpmock.MockHandlerWithHeaders{}
+
+    // A simple GET that returns some pre-canned content
+    downstream.On("HandleWithHeaders", "GET", "/object/12345", MatchHeader("MOCK", "this"), mock.Anything).Return(httpmock.Response{
+        Body: []byte(`{"status": "ok"}`),
+    })
+
+    // ... same as above
+
+
 Httpmock also provides helpers for checking calls using json objects, like so:
 
 	// This tests a hypothetical "echo" endpoint, which returns the body we pass to it.

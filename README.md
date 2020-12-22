@@ -54,6 +54,20 @@ defer s.Close()
 downstream.AssertExpectations(t)
 ```
 
+If instead you wish to match against headers as well, a slightly different httpmock object can be used (please note the change in function name to be matched against):
+
+```go
+downstream := &httpmock.MockHandlerWithHeaders{}
+
+// A simple GET that returns some pre-canned content and a specific header
+downstream.On("HandleWithHeaders", "GET", "/object/12345", MatchHeader("MOCK", "this"), mock.Anything).Return(httpmock.Response{
+    Body: []byte(`{"status": "ok"}`),
+})
+
+// ... same as above
+
+```
+
 The httpmock package also provides helpers for checking calls using json objects, like so:
 
 ```go

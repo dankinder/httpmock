@@ -41,7 +41,7 @@ func TestBasicRequestResponseWithHeaders(t *testing.T) {
 		"HandleWithHeaders",
 		"GET",
 		"/object/12345",
-		SingleHeaderMatcher(headerKey, headerVal),
+		HeaderMatcher(headerKey, headerVal),
 		mock.Anything,
 	).
 		Return(Response{
