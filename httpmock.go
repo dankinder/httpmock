@@ -30,6 +30,19 @@ This example uses MockHandler, a Handler that is a github.com/stretchr/testify/m
 
 	downstream.AssertExpectations(t)
 
+If instead you wish to match against headers as well, a slightly different httpmock object can be used
+(please note the change in function name to be matched against):
+
+    downstream := &httpmock.MockHandlerWithHeaders{}
+
+    // A simple GET that returns some pre-canned content
+    downstream.On("HandleWithHeaders", "GET", "/object/12345", MatchHeader("MOCK", "this"), mock.Anything).Return(httpmock.Response{
+        Body: []byte(`{"status": "ok"}`),
+    })
+
+    // ... same as above
+
+
 Httpmock also provides helpers for checking calls using json objects, like so:
 
 	// This tests a hypothetical "echo" endpoint, which returns the body we pass to it.
@@ -61,6 +74,13 @@ type Handler interface {
 	Handle(method, path string, body []byte) Response
 }
 
+// HandlerWithHeaders is the interface used by httpmock instead of http.Handler so that it can be mocked very easily,
+// it additionally allows matching on headers.
+type HandlerWithHeaders interface {
+	Handler
+	HandleWithHeaders(method, path string, headers http.Header, body []byte) Response
+}
+
 // Response holds the response a handler wants to return to the client.
 type Response struct {
 	// The HTTP status code to write (default: 200)
@@ -74,22 +94,32 @@ type Response struct {
 // Server listens for requests and interprets them into calls to your Handler.
 type Server struct {
 	httpServer *httptest.Server
-	handler    Handler
 }
 
 // NewServer constructs a new server and starts it (compare to httptest.NewServer). It needs to be Closed()ed.
+// If you pass a handler that conforms to the HandlerWithHeaders interface, when requests are received, the
+// HandleWithHeaders method will be called rather than Handle.
 func NewServer(handler Handler) *Server {
 	s := NewUnstartedServer(handler)
 	s.Start()
 	return s
 }
 
-// NewServer constructs a new server but doesn't start it (compare to httptest.NewUnstartedServer).
+// NewUnstartedServer constructs a new server but doesn't start it (compare to httptest.NewUnstartedServer).
+// If you pass a handler that conforms to the HandlerWithHeaders interface, when requests are received, the
+// HandleWithHeaders method will be called rather than Handle.
 func NewUnstartedServer(handler Handler) *Server {
-	return &Server{
-		handler:    handler,
-		httpServer: httptest.NewUnstartedServer(&httpToHTTPMockHandler{handler: handler}),
+	converter := &httpToHTTPMockHandler{}
+	if hh, ok := handler.(HandlerWithHeaders); ok {
+		converter.handlerWithHeaders = hh
+	} else {
+		converter.handler = handler
 	}
+	s := &Server{
+		httpServer: httptest.NewUnstartedServer(converter),
+	}
+
+	return s
 }
 
 // Start starts an unstarted server.
@@ -110,7 +140,8 @@ func (s *Server) URL() string {
 // httpToHTTPMockHandler is a normal http.Handler that converts the request into a httpmock.Handler call and calls the
 // httmock handler.
 type httpToHTTPMockHandler struct {
-	handler Handler
+	handler            Handler
+	handlerWithHeaders HandlerWithHeaders
 }
 
 // ServeHTTP makes this implement http.Handler
@@ -119,7 +150,12 @@ func (h *httpToHTTPMockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		log.Printf("Failed to read HTTP body in httpmock: %v", err)
 	}
-	resp := h.handler.Handle(r.Method, r.URL.RequestURI(), body)
+	var resp Response
+	if h.handler != nil {
+		resp = h.handler.Handle(r.Method, r.URL.RequestURI(), body)
+	} else {
+		resp = h.handlerWithHeaders.HandleWithHeaders(r.Method, r.URL.RequestURI(), r.Header, body)
+	}
 
 	for k, v := range resp.Header {
 		for _, val := range v {

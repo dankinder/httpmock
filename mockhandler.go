@@ -3,6 +3,7 @@ package httpmock
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 
 	"github.com/stretchr/testify/mock"
@@ -16,6 +17,23 @@ type MockHandler struct {
 // Handle makes this implement the Handler interface.
 func (m *MockHandler) Handle(method, path string, body []byte) Response {
 	args := m.Called(method, path, body)
+	return args.Get(0).(Response)
+}
+
+// MockHandlerWithHeaders is a httpmock.Handler that uses github.com/stretchr/testify/mock.
+type MockHandlerWithHeaders struct {
+	mock.Mock
+}
+
+// Handle makes this implement the Handler interface.
+func (m *MockHandlerWithHeaders) Handle(method, path string, body []byte) Response {
+	args := m.Called(method, path, body)
+	return args.Get(0).(Response)
+}
+
+// HandleWithHeaders makes this implement the HandlerWithHeaders interface.
+func (m *MockHandlerWithHeaders) HandleWithHeaders(method, path string, headers http.Header, body []byte) Response {
+	args := m.Called(method, path, headers, body)
 	return args.Get(0).(Response)
 }
 
@@ -44,4 +62,25 @@ func ToJSON(obj interface{}) []byte {
 		panic(fmt.Sprintf("failed to marshal object %v: %v", obj, err))
 	}
 	return data
+}
+
+// HeaderMatcher matches the presence of a header named key that has a given value. Other headers
+// are allowed to exist and are not checked.
+func HeaderMatcher(key, value string) interface{} {
+	headers := make(http.Header)
+	headers.Set(key, value)
+	return MultiHeaderMatcher(headers)
+}
+
+// MultiHeaderMatcher matches the presence and content of multiple headers. Other headers besides those
+// within desiredHeaders are allowed to exist and are not checked.
+func MultiHeaderMatcher(desiredHeaders http.Header) interface{} {
+	return mock.MatchedBy(func(headers http.Header) bool {
+		for key, val := range desiredHeaders {
+			if headers.Get(key) != val[0] {
+				return false
+			}
+		}
+		return true
+	})
 }
