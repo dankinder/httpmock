@@ -97,6 +97,8 @@ type Server struct {
 }
 
 // NewServer constructs a new server and starts it (compare to httptest.NewServer). It needs to be Closed()ed.
+// If you pass a handler that conforms to the HandlerWithHeaders interface, when requests are received, the
+// HandleWithHeaders method will be called rather than Handle.
 func NewServer(handler Handler) *Server {
 	s := NewUnstartedServer(handler)
 	s.Start()
@@ -104,6 +106,8 @@ func NewServer(handler Handler) *Server {
 }
 
 // NewUnstartedServer constructs a new server but doesn't start it (compare to httptest.NewUnstartedServer).
+// If you pass a handler that conforms to the HandlerWithHeaders interface, when requests are received, the
+// HandleWithHeaders method will be called rather than Handle.
 func NewUnstartedServer(handler Handler) *Server {
 	converter := &httpToHTTPMockHandler{}
 	if hh, ok := handler.(HandlerWithHeaders); ok {
