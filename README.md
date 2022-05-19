@@ -59,8 +59,9 @@ If instead you wish to match against headers as well, a slightly different httpm
 ```go
 downstream := &httpmock.MockHandlerWithHeaders{}
 
-// A simple GET that returns some pre-canned content and a specific header
-downstream.On("HandleWithHeaders", "GET", "/object/12345", MatchHeader("MOCK", "this"), mock.Anything).Return(httpmock.Response{
+// A simple GET that returns some pre-canned content and expects a specific header.
+// Use MultiHeaderMatcher for multiple headers.
+downstream.On("HandleWithHeaders", "GET", "/object/12345", HeaderMatcher("MOCK", "this"), mock.Anything).Return(httpmock.Response{
     Body: []byte(`{"status": "ok"}`),
 })
 
