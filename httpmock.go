@@ -33,15 +33,14 @@ This example uses MockHandler, a Handler that is a github.com/stretchr/testify/m
 If instead you wish to match against headers as well, a slightly different httpmock object can be used
 (please note the change in function name to be matched against):
 
-    downstream := &httpmock.MockHandlerWithHeaders{}
+	downstream := &httpmock.MockHandlerWithHeaders{}
 
-    // A simple GET that returns some pre-canned content
-    downstream.On("HandleWithHeaders", "GET", "/object/12345", MatchHeader("MOCK", "this"), mock.Anything).Return(httpmock.Response{
-        Body: []byte(`{"status": "ok"}`),
-    })
+	// A simple GET that returns some pre-canned content
+	downstream.On("HandleWithHeaders", "GET", "/object/12345", MatchHeader("MOCK", "this"), mock.Anything).Return(httpmock.Response{
+	    Body: []byte(`{"status": "ok"}`),
+	})
 
-    // ... same as above
-
+	// ... same as above
 
 Httpmock also provides helpers for checking calls using json objects, like so:
 
@@ -58,15 +57,15 @@ Httpmock also provides helpers for checking calls using json objects, like so:
 	downstream.On("Handle", "POST", "/echo", httpmock.JSONMatcher(o)).Return(httpmock.Response{
 		Body: httpmock.ToJSON(o),
 	})
-
 */
 package httpmock
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"testing"
 )
 
 // Handler is the interface used by httpmock instead of http.Handler so that it can be mocked very easily.
@@ -79,6 +78,13 @@ type Handler interface {
 type HandlerWithHeaders interface {
 	Handler
 	HandleWithHeaders(method, path string, headers http.Header, body []byte) Response
+}
+
+// NewHandler returns a pointer to a new handler with the test struct set
+func NewHandler(t *testing.T) *MockHandler {
+	mockHandler := &MockHandler{}
+	mockHandler.Test(t)
+	return mockHandler
 }
 
 // Response holds the response a handler wants to return to the client.
@@ -146,7 +152,7 @@ type httpToHTTPMockHandler struct {
 
 // ServeHTTP makes this implement http.Handler
 func (h *httpToHTTPMockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Failed to read HTTP body in httpmock: %v", err)
 	}
