@@ -2,7 +2,7 @@ package httpmock
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -13,7 +13,7 @@ import (
 
 func TestBasicRequestResponse(t *testing.T) {
 
-	downstream := &MockHandler{}
+	downstream := NewHandler(t)
 
 	downstream.On("Handle", "GET", "/object/12345", mock.Anything).Return(Response{
 		Body: []byte(`{"status": "ok"}`),
@@ -22,11 +22,14 @@ func TestBasicRequestResponse(t *testing.T) {
 	s := NewServer(downstream)
 	defer s.Close()
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/object/12345", s.URL()), nil)
-	resp, err := http.DefaultClient.Do(req)
-
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/object/12345", s.URL()), nil)
 	require.NoError(t, err)
-	body, _ := ioutil.ReadAll(resp.Body)
+
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
 	assert.DeepEqual(t, []byte(`{"status": "ok"}`), body)
 
 	downstream.AssertExpectations(t)
@@ -51,12 +54,16 @@ func TestBasicRequestResponseWithHeaders(t *testing.T) {
 	s := NewServer(downstream)
 	defer s.Close()
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/object/12345", s.URL()), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/object/12345", s.URL()), nil)
+	require.NoError(t, err)
+
 	req.Header.Set(headerKey, headerVal)
 	resp, err := http.DefaultClient.Do(req)
-
 	require.NoError(t, err)
-	body, _ := ioutil.ReadAll(resp.Body)
+
+	body, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+
 	assert.DeepEqual(t, []byte(`{"status": "ok"}`), body)
 
 	downstream.AssertExpectations(t)
@@ -86,11 +93,12 @@ func TestMultiHeaderMatcher(t *testing.T) {
 	s := NewServer(downstream)
 	defer s.Close()
 
-	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/object/12345", s.URL()), nil)
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/object/12345", s.URL()), nil)
+	require.NoError(t, err)
+
 	req.Header.Set(headerKey, headerVal)
 	req.Header.Set(headerKey2, headerVal2)
-	_, err := http.DefaultClient.Do(req)
-
+	_, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
 
 	downstream.AssertExpectations(t)
