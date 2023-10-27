@@ -37,7 +37,7 @@ This example uses MockHandler, a Handler that is a [testify/mock](https://godoc.
 object.
 
 ```go
-downstream := &httpmock.MockHandler{}
+downstream := httpmock.NewMockHandler(t)
 
 // A simple GET that returns some pre-canned content
 downstream.On("Handle", "GET", "/object/12345", mock.Anything).Return(httpmock.Response{
@@ -57,7 +57,7 @@ downstream.AssertExpectations(t)
 If instead you wish to match against headers as well, a slightly different httpmock object can be used (please note the change in function name to be matched against):
 
 ```go
-downstream := &httpmock.MockHandlerWithHeaders{}
+downstream := &httpmock.NewMockHandlerWithHeaders(t)
 
 // A simple GET that returns some pre-canned content and expects a specific header.
 // Use MultiHeaderMatcher for multiple headers.

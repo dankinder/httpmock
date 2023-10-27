@@ -13,7 +13,7 @@ import (
 
 func TestBasicRequestResponse(t *testing.T) {
 
-	downstream := NewHandler(t)
+	downstream := NewMockHandler(t)
 
 	downstream.On("Handle", "GET", "/object/12345", mock.Anything).Return(Response{
 		Body: []byte(`{"status": "ok"}`),
@@ -38,7 +38,7 @@ func TestBasicRequestResponse(t *testing.T) {
 func TestBasicRequestResponseWithHeaders(t *testing.T) {
 	headerKey := "HTTPMOCK-TEST"
 	headerVal := "its here"
-	downstream := &MockHandlerWithHeaders{}
+	downstream := NewMockHandlerWithHeaders(t)
 
 	downstream.On(
 		"HandleWithHeaders",
@@ -74,7 +74,7 @@ func TestMultiHeaderMatcher(t *testing.T) {
 	headerVal := "its here"
 	headerKey2 := "HTTPMOCK-TEST-2"
 	headerVal2 := "its here too!"
-	downstream := &MockHandlerWithHeaders{}
+	downstream := NewMockHandlerWithHeaders(t)
 
 	downstream.On(
 		"HandleWithHeaders",
