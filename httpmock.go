@@ -14,7 +14,7 @@ Examples
 
 This example uses MockHandler, a Handler that is a github.com/stretchr/testify/mock object.
 
-	downstream := &httpmock.MockHandler{}
+	downstream := httpmock.NewMockHandler(t)
 
 	// A simple GET that returns some pre-canned content
 	downstream.On("Handle", "GET", "/object/12345", mock.Anything).Return(httpmock.Response{
@@ -33,15 +33,14 @@ This example uses MockHandler, a Handler that is a github.com/stretchr/testify/m
 If instead you wish to match against headers as well, a slightly different httpmock object can be used
 (please note the change in function name to be matched against):
 
-    downstream := &httpmock.MockHandlerWithHeaders{}
+	downstream := httpmock.NewMockHandlerWithHeaders(t)
 
-    // A simple GET that returns some pre-canned content
-    downstream.On("HandleWithHeaders", "GET", "/object/12345", MatchHeader("MOCK", "this"), mock.Anything).Return(httpmock.Response{
-        Body: []byte(`{"status": "ok"}`),
-    })
+	// A simple GET that returns some pre-canned content
+	downstream.On("HandleWithHeaders", "GET", "/object/12345", MatchHeader("MOCK", "this"), mock.Anything).Return(httpmock.Response{
+	    Body: []byte(`{"status": "ok"}`),
+	})
 
-    // ... same as above
-
+	// ... same as above
 
 Httpmock also provides helpers for checking calls using json objects, like so:
 
@@ -58,15 +57,15 @@ Httpmock also provides helpers for checking calls using json objects, like so:
 	downstream.On("Handle", "POST", "/echo", httpmock.JSONMatcher(o)).Return(httpmock.Response{
 		Body: httpmock.ToJSON(o),
 	})
-
 */
 package httpmock
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"testing"
 )
 
 // Handler is the interface used by httpmock instead of http.Handler so that it can be mocked very easily.
@@ -79,6 +78,20 @@ type Handler interface {
 type HandlerWithHeaders interface {
 	Handler
 	HandleWithHeaders(method, path string, headers http.Header, body []byte) Response
+}
+
+// NewMockHandler returns a pointer to a new mock handler with the test struct set
+func NewMockHandler(t *testing.T) *MockHandler {
+	handler := &MockHandler{}
+	handler.Test(t)
+	return handler
+}
+
+// NewMockHandlerWithHeaders returns a pointer to a new mock handler with headers with the test struct set
+func NewMockHandlerWithHeaders(t *testing.T) *MockHandlerWithHeaders {
+	handler := &MockHandlerWithHeaders{}
+	handler.Test(t)
+	return handler
 }
 
 // Response holds the response a handler wants to return to the client.
@@ -146,7 +159,7 @@ type httpToHTTPMockHandler struct {
 
 // ServeHTTP makes this implement http.Handler
 func (h *httpToHTTPMockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		log.Printf("Failed to read HTTP body in httpmock: %v", err)
 	}
