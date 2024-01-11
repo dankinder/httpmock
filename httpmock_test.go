@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/v3/assert"
 )
 
 func TestBasicRequestResponse(t *testing.T) {
@@ -30,7 +30,7 @@ func TestBasicRequestResponse(t *testing.T) {
 
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
-	assert.DeepEqual(t, []byte(`{"status": "ok"}`), body)
+	assert.Equal(t, []byte(`{"status": "ok"}`), body)
 
 	downstream.AssertExpectations(t)
 }
@@ -64,7 +64,7 @@ func TestBasicRequestResponseWithHeaders(t *testing.T) {
 	body, err := io.ReadAll(resp.Body)
 	require.NoError(t, err)
 
-	assert.DeepEqual(t, []byte(`{"status": "ok"}`), body)
+	assert.Equal(t, []byte(`{"status": "ok"}`), body)
 
 	downstream.AssertExpectations(t)
 }
